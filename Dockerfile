@@ -1,39 +1,12 @@
-FROM node:18-alpine AS base
-
-FROM base AS deps
-RUN apk add --no-cache libc6-compat
+FROM node:16-buster
+RUN mkdir /app
+COPY package.json /app/
 WORKDIR /app
+COPY . ./
 
-COPY package*.json ./
-RUN npm ci
+ENV NEXT_PUBLIC_APP_URL=https://www.mydomain.com
 
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-ENV NEXT_TELEMETRY_DISABLED 1
-
+RUN npm install
 RUN npm run build
-
-FROM base AS runner
-WORKDIR /app
-
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-
-USER nextjs
-
 EXPOSE 3000
-
-ENV PORT 3000
-
-CMD ["npm", "start"]
+CMD ["npm", "run","start"]
