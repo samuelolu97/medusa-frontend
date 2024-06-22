@@ -1,33 +1,15 @@
-# Build the app
-FROM node:14-alpine as build
+FROM node:18.14.0
+
 WORKDIR /app
+COPY package.json ./
 
-COPY . .
-RUN npm ci
-RUN npm run build
-COPY ./.next ./.next
+RUN npm install
 
-
-# Run app
-FROM node:14-alpine
-
-# Only copy files required to run the app
-COPY --from=build /app/.next ./
-COPY --from=build /app/package.json ./
-COPY --from=build /app/package-lock.json ./
+COPY /public .
+COPY /src .
 
 EXPOSE 8000
 
-# Required for healthcheck defined in docker-compose.yml
-# If you don't have a healthcheck that uses curl, don't install it
-RUN apk --no-cache add curl
+ENV NODE_ENV=development
 
-# By adding --production npm's devDependencies are not installed
-RUN npm ci --production
-RUN ./node_modules/.bin/next telemetry disable
-
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
-
-USER nextjs
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]
