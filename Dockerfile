@@ -1,15 +1,23 @@
-FROM node:18.14.0
+# Use the official Node.js image as the base image
+FROM node:14-alpine
 
+# Set the working directory in the container
 WORKDIR /app
-COPY package.json ./
 
+# Copy package.json and package-lock.json files to the container
+COPY package.json package-lock.json ./
+
+# Install dependencies
 RUN npm install
 
-COPY /public .
-COPY /src .
+# Copy the Next.js project into the container
+COPY . .
 
-EXPOSE 8000
+# Build the Next.js application
+RUN npm run build
 
-ENV NODE_ENV=development
+# Expose the port Next.js runs on
+EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+# Command to run Next.js application
+CMD ["npm", "start"]
